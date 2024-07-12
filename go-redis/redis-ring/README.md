@@ -25,6 +25,66 @@ rdb := redis.NewRing(&redis.RingOptions{
 })
 ```
 
+更多设置请参照 redis.RingOptions:
+部分配置项继承自 Options，请查看 Options 说明。
+
+```go
+// RingOptions are used to configure a ring client and should be
+// passed to NewRing.
+type RingOptions struct {
+	// redis服务器地址
+	// 示例："one" => "192.168.1.10:6379", "two" => "192.168.1.11:6379"
+	Addrs map[string]string
+
+	// New集群节点 `*redis.Client` 的对象，
+	// go-redis 默认使用 `redis.NewClient(opt)` 方法
+	NewClient func(opt *Options) *Client
+
+    // ClientName 和 `Options` 相同，会对每个Node节点的每个网络连接配置
+	ClientName string
+
+	// 节点健康检查的时间间隔，默认500毫秒
+	// 如果连续3次检查失败，认为节点宕机
+	HeartbeatFrequency time.Duration
+
+	// 设置自定义的一致性hash算法，ring会在多个节点之间通过hash算法分布key
+	// 参考: https://medium.com/@dgryski/consistent-hashing-algorithmic-tradeoffs-ef6b8e2fcae8
+	NewConsistentHash func(shards []string) ConsistentHash
+
+    // 下面的配置项，和 `Options` 基本一致，请参照 `Options` 的说明
+
+	Dialer    func(ctx context.Context, network, addr string) (net.Conn, error)
+	OnConnect func(ctx context.Context, cn *Conn) error
+
+	Username string
+	Password string
+	DB       int
+
+	MaxRetries      int
+	MinRetryBackoff time.Duration
+	MaxRetryBackoff time.Duration
+
+	DialTimeout  time.Duration
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+
+	PoolFIFO bool
+
+    // 连接池配置项，是针对集群中的一个节点，而不是整个集群
+    // 例如你的集群有15个redis节点， `PoolSize` 代表和每个节点的连接数量
+    // 最终最大连接数为 PoolSize * 15节点数量
+	PoolSize        int
+	PoolTimeout     time.Duration
+	MinIdleConns    int
+	MaxIdleConns    int
+	ConnMaxIdleTime time.Duration
+	ConnMaxLifetime time.Duration
+
+	TLSConfig *tls.Config
+	Limiter   Limiter
+}
+```
+
 你可以像其他客户端一样执行命令：
 
 ```go
